@@ -2,6 +2,8 @@
 #include <cstddef>
 #include <iterator>
 
+namespace core_numeric {
+
 template <typename C>
 concept Iterable = requires(C c) {
     std::begin(c);
@@ -30,10 +32,10 @@ auto sum(const C &container) {
     T result{};
 
     for (const auto &value : container)
-        result += value;
+        result = result + value;
 
     return result;
-};
+}
 
 template <Iterable C>
     requires Addable<typename C::value_type> && Divisible<typename C::value_type>
@@ -41,7 +43,7 @@ auto mean(const C &container) {
     auto total = sum(container);
     auto n = static_cast<std::size_t>(std::distance(std::begin(container), std::end(container)));
     return total / n;
-};
+}
 
 template <Iterable C>
     requires Addable<typename C::value_type> && Divisible<typename C::value_type>
@@ -58,4 +60,29 @@ auto variance(const C &container) {
     }
 
     return acc / n;
-};
+}
+
+template <Iterable C>
+    requires Comparable<typename C::value_type>
+auto max(const C &container) {
+    auto it = std::begin(container);
+    auto result = *it;
+    for (; it != std::end(container); ++it) {
+        if (result < *it)
+            result = *it;
+    }
+    return result;
+}
+
+template <Iterable C, typename F>
+auto transform_reduce(const C &container, F func) {
+    using T = decltype(func(*std::begin(container)));
+    T result{};
+
+    for (const auto &value : container)
+        result = result + func(value);
+
+    return result;
+}
+
+} // namespace core_numeric
